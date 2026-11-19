@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B0B0B">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<title>SQL Quest</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<a class="skip" href="#main">Pular para o conteúdo</a>
+<div id="load" role="status">Carregando SQLite…</div>
+<aside>
+  <h1 id="home" title="Ir ao roadmap"><i data-ic="database" data-size="24"></i>SQL Quest</h1>
+  <div class="acct" id="acct"></div>
+  <div class="bar"><i id="barfill" style="transform:scaleX(0)"></i></div>
+  <div class="pc" id="pc"></div>
+  <button class="b" id="roadmapBtn"><i data-ic="map"></i>Roadmap e métricas</button>
+  <button class="b" id="examBtn"><i data-ic="file"></i>Simulado Oracle</button>
+  <button class="b" id="exportBtn"><i data-ic="package"></i>Exportar projeto</button>
+  <nav id="nav"></nav>
+  <button class="b" id="reset">Reiniciar progresso</button>
+</aside>
+<main id="main">
+  <div id="lessonView">
+    <header><div><small id="trk"></small><h2 id="title"></h2></div><span class="badge" id="badge"></span></header>
+    <div class="grid">
+      <section>
+        <h3 id="thead" style="margin-top:0"><i data-ic="book" data-size="20"></i>Conceito</h3><div class="theory" id="theory"></div>
+        <div id="explain"></div>
+        <div id="video"></div>
+        <h3><i data-ic="layers" data-size="20"></i>Esquema</h3><div id="schema"></div>
+        <details class="s"><summary>Ver amostra dos dados</summary><div id="sample"></div></details>
+      </section>
+      <section>
+        <h3 style="margin-top:0"><i data-ic="target" data-size="20"></i>Desafio</h3><div class="challenge" id="challenge"></div>
+        <div id="lockmsg" class="msg fail hidden"><i data-ic="lock"></i> Conclua a etapa anterior.</div>
+        <div id="quiz" class="hidden"></div>
+        <div id="exportBox" class="hidden"></div>
+        <div id="codeBlock">
+          <textarea id="editor"></textarea>
+          <div class="row">
+            <button class="b p" id="run"><i data-ic="play" data-size="14"></i>Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
+            <button class="b" id="hint"><i data-ic="lightbulb"></i>Dica</button>
+            <button class="b" id="sol"><i data-ic="eye"></i>Ver solução</button>
+          </div>
+          <div id="hints"></div><div id="solbox"></div>
+        </div>
+        <div id="out"></div>
+        <div class="row" style="justify-content:space-between;margin-top:20px">
+          <button class="b" id="prev"><i data-ic="arrow-left"></i>Anterior</button><button class="b" id="next">Próxima<i data-ic="arrow-right"></i></button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="panelView" class="hidden"></div>
+</main>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/sql/sql.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="icons.js"></script>
+<script src="auth.js"></script>
+<script src="db/schema.js"></script>
+<script src="storage.js"></script>
+<script src="content.js"></script>
+<script src="content_sb.js"></script>
+<script src="explicacoes.js"></script>
+<script src="videos_hc.js"></script>
+<script src="roadmap.js"></script>
+<script src="dashboard.js"></script>
+<script src="login.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
