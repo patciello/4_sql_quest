@@ -40,7 +40,7 @@ document.addEventListener('keydown', e => {
   const p = document.getElementById('amostraPanel'); if (!p || p.classList.contains('hidden')) return;
   if (e.key === 'Escape') return setAmostra(false);
   if (e.key !== 'Tab') return;                                 // mantém o Tab dentro da janela
-  const f = [...p.querySelectorAll('button, summary')], first = f[0], last = f[f.length - 1];
+  const f = [...p.querySelectorAll('button')], first = f[0], last = f[f.length - 1];
   if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
   else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 });

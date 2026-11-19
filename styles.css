@@ -101,7 +101,8 @@ button.b.ghost{border-color:transparent;color:var(--text2)}
 @media (prefers-reduced-motion:no-preference){.pop-backdrop:not(.hidden) .pop{animation:rise .22s var(--ease-out) both}}
 body.modal-open{overflow:hidden}
 .pop-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font:600 15px var(--sans);color:var(--text)}
-.pop details.s{margin:12px 0 0;padding:4px 0 0;background:none;border:0;border-top:1px solid var(--line)}
+.pop-sub{margin-top:12px;padding-top:14px;border-top:1px solid var(--line)}
+.pop-sub h4{margin:0 0 10px;font:600 14px var(--sans);color:var(--text2)}
 @media (max-width:720px){.pop-backdrop{padding:16px}}
 kbd{font:500 12px var(--mono);background:var(--surface3);border:1px solid var(--line);border-radius:6px;padding:1px 6px}
 
