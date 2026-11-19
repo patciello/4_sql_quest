@@ -20,6 +20,21 @@ state.stats = Object.assign({attempts: {}, first: {}, days: {}}, state.stats || 
 if (!ITEMS.some(i => i.id === state.current)) state.current = ITEMS[0].id;
 const attempt = id => { state.stats.attempts[id] = (state.stats.attempts[id] || 0) + 1; };
 const save = () => { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {} };
+// Painel flutuante "Amostra" (esquema + dados). Delegação no documento: o botão é estático e o painel sobrevive às trocas de lição.
+const setAmostra = open => {
+  const p = document.getElementById('amostraPanel'), b = document.getElementById('amostra');
+  if (!p || !b) return;
+  const hadFocus = p.contains(document.activeElement);       // foco estava dentro do painel?
+  p.classList.toggle('hidden', !open); b.setAttribute('aria-expanded', String(open));
+  if (open) document.getElementById('amostraClose').focus();  // leva o foco para dentro do painel
+  else if (hadFocus) b.focus();                               // devolve o foco ao botão ao fechar
+};
+document.addEventListener('click', e => {
+  const p = document.getElementById('amostraPanel'); if (!p) return;
+  if (e.target.closest('#amostra')) return setAmostra(p.classList.contains('hidden'));
+  if (e.target.closest('#amostraClose') || (!p.classList.contains('hidden') && !p.contains(e.target))) setAmostra(false);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') setAmostra(false); });
 const isDone = id => state.completed.includes(id);
 
 /* ───────── Sandbox SQLite (recriado a cada execução) ───────── */
