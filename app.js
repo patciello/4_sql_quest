@@ -26,15 +26,24 @@ const setAmostra = open => {
   if (!p || !b) return;
   const hadFocus = p.contains(document.activeElement);       // foco estava dentro do painel?
   p.classList.toggle('hidden', !open); b.setAttribute('aria-expanded', String(open));
-  if (open) document.getElementById('amostraClose').focus();  // leva o foco para dentro do painel
+  document.body.classList.toggle('modal-open', open);         // trava a rolagem da página ao fundo
+  if (open) document.getElementById('amostraClose').focus();  // leva o foco para dentro da janela
   else if (hadFocus) b.focus();                               // devolve o foco ao botão ao fechar
 };
 document.addEventListener('click', e => {
   const p = document.getElementById('amostraPanel'); if (!p) return;
   if (e.target.closest('#amostra')) return setAmostra(p.classList.contains('hidden'));
-  if (e.target.closest('#amostraClose') || (!p.classList.contains('hidden') && !p.contains(e.target))) setAmostra(false);
+  // fecha no botão Fechar ou ao clicar no fundo escurecido (o próprio #amostraPanel é o fundo)
+  if (e.target.closest('#amostraClose') || e.target === p) setAmostra(false);
 });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') setAmostra(false); });
+document.addEventListener('keydown', e => {
+  const p = document.getElementById('amostraPanel'); if (!p || p.classList.contains('hidden')) return;
+  if (e.key === 'Escape') return setAmostra(false);
+  if (e.key !== 'Tab') return;                                 // mantém o Tab dentro da janela
+  const f = [...p.querySelectorAll('button, summary')], first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
 const isDone = id => state.completed.includes(id);
 
 /* ───────── Sandbox SQLite (recriado a cada execução) ───────── */

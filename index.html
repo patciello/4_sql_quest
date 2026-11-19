@@ -43,9 +43,9 @@
           <div class="row">
             <button class="b p" id="run"><i data-ic="play" data-size="14"></i>Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
             <button class="b" id="hint"><i data-ic="lightbulb"></i>Dica</button>
-            <div class="pop-wrap">
-              <button class="b" id="amostra" aria-expanded="false" aria-controls="amostraPanel"><i data-ic="layers"></i>Amostra</button>
-              <div class="pop hidden" id="amostraPanel" role="dialog" aria-label="Esquema e amostra de dados">
+            <button class="b" id="amostra" aria-haspopup="dialog" aria-expanded="false" aria-controls="amostraPanel"><i data-ic="layers"></i>Amostra</button>
+            <div class="pop-backdrop hidden" id="amostraPanel">
+              <div class="pop" role="dialog" aria-modal="true" aria-label="Esquema e amostra de dados">
                 <div class="pop-head"><span>Esquema</span><button class="b sm ghost" id="amostraClose" aria-label="Fechar">Fechar</button></div>
                 <div id="schema"></div>
                 <details class="s"><summary>Ver amostra dos dados</summary><div id="sample"></div></details>
