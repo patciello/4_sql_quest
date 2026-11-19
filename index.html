@@ -3,201 +3,62 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0B0B0B">
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <title>SQL Quest</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
-<style>
-:root{--bg:#0D1117;--surface:#161B22;--surface2:#1F2630;--border:#30363D;--text:#E6EDF3;--muted:#8B949E;
---accent:#58A6FF;--ok:#3FB950;--warn:#D29922;--err:#F85149;--key:#E3B341;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 Inter,system-ui,sans-serif;display:flex;min-height:100vh}
-aside{width:300px;background:var(--surface);border-right:1px solid var(--border);padding:18px 14px;position:sticky;top:0;height:100vh;overflow:auto;flex-shrink:0}
-aside h1{font-size:20px;margin:0 0 12px}
-.bar{height:8px;background:var(--border);border-radius:99px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--ok);transition:width .3s}
-.pc{color:var(--muted);font-size:13px;margin:6px 0 12px}
-.grp{font:600 11px Inter;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:16px 4px 4px}
-details.trk{margin:2px 0}
-details.trk>summary{cursor:pointer;list-style:none;padding:8px 8px;border-radius:8px;font-size:14px;font-weight:600;display:flex;justify-content:space-between;gap:8px}
-details.trk>summary::-webkit-details-marker{display:none}
-details.trk>summary:hover{background:var(--surface2)}
-details.trk>summary span.n{color:var(--muted);font-weight:500;font-size:12px;white-space:nowrap}
-.nav{display:block;width:100%;text-align:left;background:none;border:1px solid transparent;color:var(--text);padding:6px 10px 6px 22px;border-radius:8px;cursor:pointer;font:inherit;font-size:13.5px;min-height:34px}
-.nav:hover{background:var(--surface2)} .nav.on{background:rgba(88,166,255,.14);border-color:var(--accent)} .nav.lock{color:var(--muted)}
-main{flex:1;padding:28px 32px;max-width:1500px;min-width:0}
-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-header small{color:var(--muted)} h2{margin:2px 0 16px;font-size:28px}
-.badge{padding:3px 12px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid var(--border);color:var(--muted);white-space:nowrap}
-.badge.ok{color:var(--ok);border-color:var(--ok);background:rgba(63,185,80,.12)}
-.grid{display:grid;grid-template-columns:2fr 3fr;gap:28px}
-h3{font-size:18px;margin:18px 0 8px}
-.theory code,.theory pre,.challenge code,.challenge pre,.note code,.expl code{font-family:var(--mono);font-size:13.5px}
-.theory pre,.challenge pre{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;margin:8px 0}
-.theory :not(pre)>code,.challenge :not(pre)>code,.note :not(pre)>code,.expl :not(pre)>code,.opt :not(pre)>code{background:var(--surface2);padding:1px 6px;border-radius:5px;font-family:var(--mono);font-size:13px}
-.note{background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.5);border-radius:10px;padding:10px 14px;font-size:14px;margin-top:10px}
-details.ex{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px 14px;margin:14px 0}
-details.ex summary{cursor:pointer;font-weight:600;padding:8px 0}
-details.ex ol{padding-left:20px;margin:6px 0} details.ex li{margin:6px 0}
-details.ex code{font-family:var(--mono);font-size:13px;background:var(--surface2);padding:1px 6px;border-radius:5px}
-.trap{background:rgba(210,153,34,.08);border-left:3px solid var(--warn);padding:8px 12px;border-radius:0 8px 8px 0;font-size:14.5px}
-.vid iframe{width:100%;aspect-ratio:16/9;border:0;border-radius:10px;margin-top:8px;background:#000}
-.vid a{color:var(--accent)}
-.vcard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin:8px 0}
-.vcard .hint{margin:2px 0 8px}
-.tbl{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden}
-.tbl h4{margin:0;padding:8px 12px;background:var(--surface2);font:600 13px var(--mono);color:var(--accent)}
-.tbl .c{display:flex;justify-content:space-between;gap:14px;padding:4px 12px;border-top:1px solid var(--border);font:12.5px var(--mono)}
-.tbl .t{color:var(--muted)} .pk{color:var(--key)} .fk{color:var(--ok)}
-details.s summary{cursor:pointer;color:var(--muted);font-size:14px;margin:6px 0}
-.challenge{background:rgba(88,166,255,.10);border:1px solid var(--accent);border-radius:10px;padding:12px 16px}
-.CodeMirror{height:auto;min-height:190px;border:1px solid var(--border);border-radius:10px;margin:12px 0;font:15px/1.5 var(--mono)}
-.CodeMirror-scroll{min-height:190px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-button.b{font:600 14px Inter,sans-serif;padding:10px 16px;min-height:42px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer}
-button.b:hover:not(:disabled){border-color:var(--accent)} button.b.p{background:var(--accent);border-color:var(--accent);color:#0D1117}
-button.b:disabled{opacity:.4;cursor:default} button.b.sm{min-height:34px;padding:6px 12px;font-size:13px}
-aside button.b{width:100%;margin-top:8px}
-button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-kbd{font:12px var(--mono);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px}
-.hint{color:var(--muted);font-size:14px;margin:6px 0}
-.msg{border:1px solid;border-radius:10px;padding:12px 16px;margin:12px 0}
-.msg.ok{border-color:var(--ok);background:rgba(63,185,80,.10)} .msg.fail{border-color:var(--warn);background:rgba(210,153,34,.10)}
-.msg.err{border-color:var(--err);background:rgba(248,81,73,.10)} .msg.err pre{margin:4px 0 0;color:var(--err);font:13px var(--mono);white-space:pre-wrap}
-.msg small{display:block;color:var(--muted);margin-top:4px}
-.sol{font:13.5px var(--mono);background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;white-space:pre-wrap;margin-top:8px}
-.res{overflow:auto;border:1px solid var(--border);border-radius:10px;max-height:420px}
-table{border-collapse:collapse;width:100%;font:13.5px var(--mono)}
-th{background:var(--surface2);text-align:left;padding:7px 12px;color:var(--accent);position:sticky;top:0}
-td{padding:6px 12px;border-top:1px solid var(--border)} td.n{color:var(--muted);font-style:italic}
-.pg{display:flex;gap:10px;align-items:center;margin:8px 0;color:var(--muted);font-size:13px;flex-wrap:wrap}
-.pg select{background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px}
-.opt{display:flex;gap:10px;align-items:flex-start;padding:10px 14px;border:1px solid var(--border);border-radius:10px;margin:8px 0;cursor:pointer;background:var(--surface)}
-.opt:hover{border-color:var(--accent)} .opt input{margin-top:5px}
-.opt.right{border-color:var(--ok);background:rgba(63,185,80,.10)} .opt.wrong{border-color:var(--err);background:rgba(248,81,73,.10)}
-.qtext{font-size:17px;margin:4px 0 8px}
-.expl{margin-top:8px;padding:10px 14px;border-left:3px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0;font-size:14.5px}
-.pkg{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin:10px 0;font-size:14.5px}
-.pkg code{font-family:var(--mono);font-size:13px;background:var(--surface2);padding:1px 6px;border-radius:5px}
-.tim{font:600 18px var(--mono);color:var(--accent)} .tim.low{color:var(--err)}
-.qnav{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
-.qnav button{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font:600 13px Inter}
-.qnav button.a{background:rgba(88,166,255,.18);border-color:var(--accent)} .qnav button.c{outline:2px solid var(--accent)}
-.score{font-size:42px;font-weight:700} .score.ok{color:var(--ok)} .score.fail{color:var(--warn)}
-.dom{display:grid;grid-template-columns:1fr 60px;gap:6px 12px;margin:10px 0;font-size:14px;align-items:center}
-.dom .bar{height:6px}
-.test li{margin:2px 0;font-size:14px} .test .f{color:var(--err)} .test .o{color:var(--ok)}
-#load{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9;color:var(--muted);text-align:center;padding:20px}
-#toast{position:fixed;bottom:24px;right:24px;background:var(--ok);color:#0D1117;font-weight:700;padding:12px 18px;border-radius:10px;opacity:0;transform:translateY(10px);transition:.3s;pointer-events:none}
-#toast.show{opacity:1;transform:none}
-aside .bar.sm{margin:2px 8px 4px}
-details.ph{margin:6px 0;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02)}
-details.ph>summary{cursor:pointer;list-style:none;padding:9px 10px;display:flex;gap:8px;align-items:center;font-weight:600;font-size:14px}
-details.ph>summary::-webkit-details-marker{display:none}
-details.ph>summary .pht{flex:1} details.ph>summary .n{color:var(--muted);font-size:12px;font-weight:500}
-.phn{width:22px;height:22px;border-radius:50%;background:var(--surface2);border:1px solid var(--border);display:inline-flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
-details.ph[open]>summary{border-bottom:1px solid var(--border)}
-.lane-t{font:600 11px Inter;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:10px 10px 2px}
-details.ph details.trk>summary{padding:6px 8px;font-size:13px;font-weight:500}
-.n{color:var(--muted)}
-.bar.sm{height:4px}
-/* ── dashboard ── */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:6px 0 16px}
-.kpi{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
-.kpi b{display:block;font-size:20px;line-height:1.1} .kpi small{color:var(--muted);font-size:12px}
-.kpi .ico{font-size:24px;width:40px;text-align:center}
-.ring{--s:64px;width:var(--s);height:var(--s);border-radius:50%;background:conic-gradient(var(--ok) calc(var(--p)*1%),var(--border) 0);display:grid;place-items:center;flex-shrink:0;position:relative}
-.ring::before{content:"";position:absolute;inset:calc(var(--s)*.12);border-radius:50%;background:var(--surface)}
-.ring span{position:relative;font:600 calc(var(--s)*.22) Inter}
-.dashrow{display:grid;grid-template-columns:1fr 1.4fr;gap:12px;margin-bottom:22px}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
-.card small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
-.card h3{margin:6px 0 2px;font-size:18px} .card p{margin:6px 0 0;font-size:14.5px}
-.card.next{border-color:var(--accent);background:rgba(88,166,255,.08)}
-.act{display:flex;gap:6px;align-items:flex-end;height:90px;margin-top:10px}
-.act .col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;gap:4px}
-.act .col i{display:block;width:100%;border-radius:4px 4px 0 0;background:var(--border)} .act .col i.on{background:var(--ok)}
-.act .col span{font-size:10px;color:var(--muted)}
-.road{position:relative;margin:0 0 20px 6px;padding-left:26px;border-left:3px solid var(--border)}
-.phase{position:relative;margin-bottom:18px}
-.phase .node{position:absolute;left:-43px;top:6px;width:28px;height:28px;border-radius:50%;background:var(--surface2);border:2px solid var(--border);display:grid;place-items:center;font:700 13px Inter}
-.phase.done .node{background:var(--ok);border-color:var(--ok);color:#0D1117}
-.phase.active .node{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 4px rgba(88,166,255,.2)}
-.phbody{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
-.phase.active .phbody{border-color:var(--accent)}
-.phase.final .phbody{border-color:var(--key);background:linear-gradient(180deg,rgba(227,179,65,.07),var(--surface) 40%)}
-.phhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
-.phhead h3{margin:0;font-size:18px} .goal{margin:2px 0 6px;color:var(--muted);font-size:14.5px}
-.here{font:600 11px Inter;background:rgba(88,166,255,.18);color:var(--accent);border-radius:99px;padding:2px 8px;vertical-align:middle}
-.meta{display:flex;gap:14px;flex-wrap:wrap;font-size:13px;color:var(--muted)}
-.trow{margin-top:12px} .tname{display:flex;justify-content:space-between;font-size:14px;font-weight:600;margin-bottom:4px}
-.chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
-.chip{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--muted);font:600 11px Inter;cursor:pointer;padding:0}
-.chip:hover{border-color:var(--accent);color:var(--text)}
-.chip.done{background:rgba(63,185,80,.2);border-color:var(--ok);color:var(--ok)}
-.chip.cur{border-color:var(--accent);color:var(--accent)} .chip.lock{opacity:.45}
-.lanes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px}
-.lane{border:1px solid var(--border);border-radius:12px;padding:12px 14px;background:rgba(0,0,0,.15)}
-.lane h4{margin:0 0 8px;font-size:15px}
-.gauge{display:flex;gap:12px;align-items:center;margin-bottom:8px} .gauge b{font-size:28px;display:block;line-height:1} .gauge small{color:var(--muted)}
-.dom-row{display:grid;grid-template-columns:1.6fr 1fr auto;gap:8px;align-items:center;font-size:13px;margin:3px 0}
-.audit{margin:8px 0 14px;border:1px solid var(--border);border-radius:12px;padding:6px 14px;background:var(--surface)}
-.audit>summary{cursor:pointer;padding:8px 0;font-weight:600}
-.audgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:8px}
-.foot{color:var(--muted);font-size:12.5px;margin:14px 0 4px} .foot a{color:var(--accent)}
-#trk a{color:var(--accent);text-decoration:none} #trk a:hover{text-decoration:underline}
-@media(max-width:1000px){.dashrow,.lanes{grid-template-columns:1fr}}
-.hidden{display:none !important}
-@media(max-width:1000px){body{flex-direction:column}aside{width:auto;height:auto;position:static}.grid{grid-template-columns:1fr}main{padding:20px 16px}}
-</style>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<div id="load">Carregando SQLite…</div>
+<a class="skip" href="#main">Pular para o conteúdo</a>
+<div id="load" role="status">Carregando SQLite…</div>
 <aside>
-  <h1 id="home" style="cursor:pointer" title="Ir ao roadmap">🛢️ SQL Quest</h1>
-  <div class="bar"><i id="barfill" style="width:0"></i></div>
+  <h1 id="home" title="Ir ao roadmap"><i data-ic="database" data-size="24"></i>SQL Quest</h1>
+  <div class="acct" id="acct"></div>
+  <div class="bar"><i id="barfill" style="transform:scaleX(0)"></i></div>
   <div class="pc" id="pc"></div>
-  <button class="b p" id="roadmapBtn">🗺️ Roadmap e métricas</button>
-  <button class="b" id="examBtn">📝 Simulado Oracle</button>
-  <button class="b" id="exportBtn">📦 Exportar projeto</button>
+  <button class="b" id="roadmapBtn"><i data-ic="map"></i>Roadmap e métricas</button>
+  <button class="b" id="examBtn"><i data-ic="file"></i>Simulado Oracle</button>
+  <button class="b" id="exportBtn"><i data-ic="package"></i>Exportar projeto</button>
   <nav id="nav"></nav>
   <button class="b" id="reset">Reiniciar progresso</button>
 </aside>
-<main>
+<main id="main">
   <div id="lessonView">
     <header><div><small id="trk"></small><h2 id="title"></h2></div><span class="badge" id="badge"></span></header>
     <div class="grid">
       <section>
-        <h3 id="thead" style="margin-top:0">📖 Conceito</h3><div class="theory" id="theory"></div>
+        <h3 id="thead" style="margin-top:0"><i data-ic="book" data-size="20"></i>Conceito</h3><div class="theory" id="theory"></div>
         <div id="explain"></div>
         <div id="video"></div>
-        <h3>🗂️ Esquema</h3><div id="schema"></div>
+        <h3><i data-ic="layers" data-size="20"></i>Esquema</h3><div id="schema"></div>
         <details class="s"><summary>Ver amostra dos dados</summary><div id="sample"></div></details>
       </section>
       <section>
-        <h3 style="margin-top:0">🎯 Desafio</h3><div class="challenge" id="challenge"></div>
-        <div id="lockmsg" class="msg fail hidden">🔒 Conclua a etapa anterior.</div>
+        <h3 style="margin-top:0"><i data-ic="target" data-size="20"></i>Desafio</h3><div class="challenge" id="challenge"></div>
+        <div id="lockmsg" class="msg fail hidden"><i data-ic="lock"></i> Conclua a etapa anterior.</div>
         <div id="quiz" class="hidden"></div>
         <div id="exportBox" class="hidden"></div>
         <div id="codeBlock">
           <textarea id="editor"></textarea>
           <div class="row">
-            <button class="b p" id="run">▶ Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
-            <button class="b" id="hint">💡 Dica</button>
-            <button class="b" id="sol">👁 Ver solução</button>
+            <button class="b p" id="run"><i data-ic="play" data-size="14"></i>Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd></button>
+            <button class="b" id="hint"><i data-ic="lightbulb"></i>Dica</button>
+            <button class="b" id="sol"><i data-ic="eye"></i>Ver solução</button>
           </div>
           <div id="hints"></div><div id="solbox"></div>
         </div>
         <div id="out"></div>
         <div class="row" style="justify-content:space-between;margin-top:20px">
-          <button class="b" id="prev">← Anterior</button><button class="b" id="next">Próxima →</button>
+          <button class="b" id="prev"><i data-ic="arrow-left"></i>Anterior</button><button class="b" id="next">Próxima<i data-ic="arrow-right"></i></button>
         </div>
       </section>
     </div>
   </div>
   <div id="panelView" class="hidden"></div>
 </main>
-<div id="toast">🎉 Concluído!</div>
+<div id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
@@ -205,12 +66,17 @@ details.ph details.trk>summary{padding:6px 8px;font-size:13px;font-weight:500}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/matchbrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/addon/edit/closebrackets.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="icons.js"></script>
+<script src="auth.js"></script>
+<script src="db/schema.js"></script>
+<script src="storage.js"></script>
 <script src="content.js"></script>
 <script src="content_sb.js"></script>
 <script src="explicacoes.js"></script>
 <script src="videos_hc.js"></script>
 <script src="roadmap.js"></script>
 <script src="dashboard.js"></script>
+<script src="login.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

@@ -13,11 +13,13 @@ const EXAM_N = 20, EXAM_MIN = 30, EXAM_PASS = 65;
 let SQLJS, cm, cur, exam = null, examTimer = null;
 const drafts = {}, hintsShown = {}, openTracks = new Set();
 let state = {completed: [], current: ITEMS[0].id, project: {}, exams: [], stats: {}};
-try { Object.assign(state, JSON.parse(localStorage.getItem('sqlquest2') || '{}')); } catch (e) {}
+/* progresso por usuário: o convidado mantém a chave original; quem tem conta usa 'sqlquest2:<id>' */
+const STATE_KEY = 'sqlquest2' + (Auth.isGuest() ? '' : ':' + Auth.current().id);
+try { Object.assign(state, JSON.parse(localStorage.getItem(STATE_KEY) || '{}')); } catch (e) {}
 state.stats = Object.assign({attempts: {}, first: {}, days: {}}, state.stats || {});
 if (!ITEMS.some(i => i.id === state.current)) state.current = ITEMS[0].id;
 const attempt = id => { state.stats.attempts[id] = (state.stats.attempts[id] || 0) + 1; };
-const save = () => { try { localStorage.setItem('sqlquest2', JSON.stringify(state)); } catch (e) {} };
+const save = () => { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {} };
 const isDone = id => state.completed.includes(id);
 
 /* ───────── Sandbox SQLite (recriado a cada execução) ───────── */
@@ -93,31 +95,31 @@ function locked(item) {
   const i = PROJECT.items.indexOf(item);
   return i > 0 && !isDone(PROJECT.items[i - 1].id);
 }
-const kindIcon = it => it.kind === 'quiz' ? '❓' : it.kind === 'export' ? '📦' : '⌨️';
+const kindIcon = it => ic(it.kind === 'quiz' ? 'help' : it.kind === 'export' ? 'package' : 'code', 14);
 
 function renderNav() {
   const total = ITEMS.length, done = ITEMS.filter(i => isDone(i.id)).length;
-  $('barfill').style.width = (done / total * 100) + '%';
+  $('barfill').style.transform = `scaleX(${done / total})`;
   $('pc').textContent = `${done}/${total} itens · ${Math.round(done / total * 100)}%`;
   const trackHtml = t => {
     const d = t.items.filter(i => isDone(i.id)).length;
     const open = openTracks.has(t.id) || (cur && cur.track === t);
-    return `<details class="trk" data-t="${t.id}" ${open ? 'open' : ''}><summary><span>${t.icon} ${esc(t.title)}</span><span class="n">${d}/${t.items.length}</span></summary>` +
-      t.items.map(i => `<button class="nav ${cur && i.id === cur.id ? 'on' : ''} ${locked(i) ? 'lock' : ''}" data-id="${i.id}">${isDone(i.id) ? '✅' : locked(i) ? '🔒' : kindIcon(i)} ${esc(i.title)}</button>`).join('') + '</details>';
+    return `<details class="trk" data-t="${t.id}" ${open ? 'open' : ''}><summary><span title="${esc(t.title)}">${icoOf(t.icon)}<span class="tx">${esc(t.title)}</span></span><span class="n">${d}/${t.items.length}</span></summary>` +
+      t.items.map(i => `<button class="nav ${cur && i.id === cur.id ? 'on' : ''} ${locked(i) ? 'lock' : ''}" data-id="${i.id}" title="${esc(i.title)}">${isDone(i.id) ? ic('check-circle', 14) : locked(i) ? ic('lock', 14) : kindIcon(i)}<span class="tx">${esc(i.title)}</span></button>`).join('') + '</details>';
   };
   $('nav').innerHTML = PHASES.map(p => {
     const items = phaseItems(p), d = items.filter(i => isDone(i.id)).length;
     const open = openTracks.has(p.id) || (cur && PHASE_OF[cur.track.id] === p);
     const inner = p.lanes ? p.lanes.map(l => `<div class="lane-t">${l.icon} ${esc(l.title)}</div>` + l.tracks.map(trackHtml).join('')).join('') : p.tracks.map(trackHtml).join('');
-    return `<details class="ph" data-t="${p.id}" ${open ? 'open' : ''}><summary><span class="phn">${d === items.length ? '✓' : p.n}</span><span class="pht">${p.icon} ${esc(p.title)}</span><span class="n">${d}/${items.length}</span></summary>
+    return `<details class="ph" data-t="${p.id}" ${open ? 'open' : ''}><summary><span class="phn">${d === items.length ? ic('check', 13) : p.n}</span><span class="pht">${icoOf(p.icon)}<span class="tx">${esc(p.title)}</span></span><span class="n">${d}/${items.length}</span></summary>
       <div class="bar sm"><i style="width:${Math.round(d / items.length * 100)}%"></i></div>${inner}</details>`;
   }).join('');
   $('nav').querySelectorAll('button').forEach(b => b.onclick = () => go(b.dataset.id));
   $('nav').querySelectorAll('details').forEach(d => d.ontoggle = e => { if (e.target !== d) return; d.open ? openTracks.add(d.dataset.t) : openTracks.delete(d.dataset.t); });
 }
 
-function showLesson() { $('lessonView').classList.remove('hidden'); $('panelView').classList.add('hidden'); }
-function showPanel(html) { $('lessonView').classList.add('hidden'); $('panelView').classList.remove('hidden'); if (html !== undefined) $('panelView').innerHTML = html; window.scrollTo(0, 0); }
+function showLesson() { $('roadmapBtn').classList.remove('on'); $('lessonView').classList.remove('hidden'); $('panelView').classList.add('hidden'); }
+function showPanel(html) { $('roadmapBtn').classList.toggle('on', !!(html && html.includes('class="kpis"'))); $('lessonView').classList.add('hidden'); $('panelView').classList.remove('hidden'); if (html !== undefined) $('panelView').innerHTML = html; window.scrollTo(0, 0); }
 
 function tableHtml(cols, rows) {
   return `<div class="res"><table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>` +
@@ -136,7 +138,7 @@ function renderSchema(item) {
       const fks = {};
       (db.exec(`PRAGMA foreign_key_list(${t})`)[0]?.values || []).forEach(r => fks[r[3]] = r[2] + '.' + r[4]);
       schemaHtml += `<div class="tbl"><h4>${esc(t)}</h4>` + info.values.map(c =>
-        `<div class="c"><span>${esc(c[1])}${c[5] ? ' <span class="pk">🔑</span>' : ''}${fks[c[1]] ? ` <span class="fk">→ ${esc(fks[c[1]])}</span>` : ''}</span><span class="t">${esc(c[2])}</span></div>`).join('') + '</div>';
+        `<div class="c"><span>${esc(c[1])}${c[5] ? ` <span class="pk">${ic('key', 12)}</span>` : ''}${fks[c[1]] ? ` <span class="fk">${ic('arrow-right', 12)} ${esc(fks[c[1]])}</span>` : ''}</span><span class="t">${esc(c[2])}</span></div>`).join('') + '</div>';
       const s = db.exec(`SELECT * FROM ${t} LIMIT 3`)[0];
       sampleHtml += `<p class="hint">${esc(t)}</p>` + (s ? tableHtml(s.columns, s.values) : '<p class="hint">(vazia)</p>');
     }
@@ -153,7 +155,7 @@ function go(id) {
   setPassed(false);
   const i = ITEMS.indexOf(cur);
   const ph = PHASE_OF[cur.track.id];
-  $('trk').innerHTML = `<a href="#" id="toMap">🗺️ Roadmap</a> › Fase ${ph.n} · ${esc(ph.title)} › ${cur.track.icon} ${esc(cur.track.title)}`;
+  $('trk').innerHTML = `<a href="#" id="toMap">Roadmap</a> › Fase ${ph.n} · ${esc(ph.title)} › ${esc(cur.track.title)}`;
   $('toMap').onclick = e => { e.preventDefault(); renderDash(); };
   $('title').textContent = cur.title;
   setBadge();
@@ -180,24 +182,23 @@ function go(id) {
   if (cur.kind === 'quiz') renderQuiz();
   if (cur.kind === 'export') renderExport();
   $('prev').disabled = i === 0; $('next').disabled = i === ITEMS.length - 1;
-  $('next').classList.toggle('p', isDone(id));
-  renderNav(); window.scrollTo(0, 0);
+    renderNav(); window.scrollTo(0, 0);
 }
 
 /* Explicação detalhada (recolhida) + videoaula embutida do canal Curso em Vídeo */
 function renderLearn() {
   const ex = EXPLAIN[cur.id] || cur.how;
-  $('explain').innerHTML = ex ? `<details class="ex"><summary>🧠 Explicação passo a passo</summary>${ex}</details>` : '';
+  $('explain').innerHTML = ex ? `<details class="ex"><summary>${ic('brain', 18)} Explicação passo a passo</summary>${ex}</details>` : '';
   const vids = ITEM_VIDEO[cur.id] || TRACK_VIDEO[cur.track.id] || [];
   if (!vids.length) { $('video').innerHTML = ''; return; }
   const fileMode = location.protocol === 'file:';  // YouTube recusa embed sem origem (erro 153)
-  $('video').innerHTML = `<div class="vid"><h3>🎬 Videoaula${vids.length > 1 ? 's' : ''}</h3>` +
+  $('video').innerHTML = `<div class="vid"><h3>${ic('film', 20)} Videoaula${vids.length > 1 ? 's' : ''}</h3>` +
     vids.map((entry, n) => {
       const [ref, label] = entry.split('|'), [id, st] = ref.split('@'), start = +st || 0;
       const [title, ch, date, min] = VMETA[id], link = `https://www.youtube.com/watch?v=${id}${start ? '&t=' + start + 's' : ''}`;
       const at = start ? ` · começa em ${Math.floor(start / 60)}:${String(start % 60).padStart(2, '0')}` : '';
-      return `<div class="vcard"><div><b>${esc(title)}</b>${label ? `<div class="hint">📍 ${esc(label)}${at}</div>` : ''}<div class="hint">${esc(ch)} · ${date.split('-').reverse().join('/')} · ${min} min</div></div>
-        <div class="row"><button class="b sm vplay" data-id="${id}" data-start="${start}" data-k="${n}">${fileMode ? '▶ Assistir em janela' : '▶ Assistir aqui'}</button><a href="${link}" target="_blank" rel="noopener noreferrer">Abrir no YouTube ↗</a></div><div class="vframe" id="vf-${n}"></div></div>`;
+      return `<div class="vcard"><div><b title="${esc(title)}">${esc(title)}</b>${label ? `<div class="hint">${ic('pin', 13)} ${esc(label)}${at}</div>` : ''}<div class="hint">${esc(ch)} · ${date.split('-').reverse().join('/')} · ${min} min</div></div>
+        <div class="row"><button class="b sm vplay" data-id="${id}" data-start="${start}" data-k="${n}">${ic('play', 12)} ${fileMode ? 'Assistir em janela' : 'Assistir aqui'}</button><a href="${link}" target="_blank" rel="noopener noreferrer">Abrir no YouTube ${ic('external', 13)}</a></div><div class="vframe" id="vf-${n}"></div></div>`;
     }).join('') +
     `${fileMode ? '<div class="hint">O YouTube não permite o player embutido em arquivo local; o vídeo abre em janela.</div>' : ''}</div>`;
   document.querySelectorAll('.vplay').forEach(b => b.onclick = () => {
@@ -210,12 +211,12 @@ function renderLearn() {
 
 function setBadge() {
   const d = isDone(cur.id);
-  $('badge').textContent = d ? '✓ Concluído' : 'Em andamento';
+  $('badge').innerHTML = d ? ic('check', 13) + ' Concluído' : 'Em andamento';
   $('badge').className = 'badge' + (d ? ' ok' : '');
 }
 
 function toast(msg) {
-  $('toast').textContent = msg; $('toast').classList.add('show');
+  $('toast').innerHTML = ic('check-circle', 18) + ' ' + esc(msg); $('toast').classList.add('show');
   setTimeout(() => $('toast').classList.remove('show'), 2500);
 }
 function complete(item) {
@@ -224,15 +225,16 @@ function complete(item) {
   const day = localISO(new Date());
   state.stats.days[day] = (state.stats.days[day] || 0) + 1;
   state.stats.first[item.id] = (state.stats.attempts[item.id] || 1) === 1;
+  Store.recordCompletion(item.id, state.stats.first[item.id], item.project ? state.project[item.id] : null);
   save(); renderNav();
-  if (cur === item) { setBadge(); $('next').classList.add('p'); }
-  toast('🎉 Concluído!');
+  if (cur === item) { setBadge(); }
+  toast('Concluído');
   return true;
 }
 
 /* ───────── Atalho Ctrl+Enter: executa; após acerto, avança ───────── */
-const RUN_LABEL = '▶ Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd>';
-const NEXT_LABEL = '➡ Próximo exercício <kbd>Ctrl</kbd>+<kbd>Enter</kbd>';
+const RUN_LABEL = ic('play', 14) + 'Executar e validar <kbd>Ctrl</kbd>+<kbd>Enter</kbd>';
+const NEXT_LABEL = ic('arrow-right', 16) + 'Próximo exercício <kbd>Ctrl</kbd>+<kbd>Enter</kbd>';
 let passedNow = false;
 function setPassed(v) {
   passedNow = v;
@@ -250,17 +252,18 @@ function showResult(res, size = 10, page = 1) {
   $('pp').onclick = () => showResult(res, size, page - 1); $('pn').onclick = () => showResult(res, size, page + 1);
   $('size').onchange = e => showResult(res, +e.target.value, 1);
 }
-function showErr(msg) { $('out').innerHTML = `<div class="msg err"><b>⚠ Erro de SQL</b><pre>${esc(msg)}</pre></div>`; }
+function showErr(msg) { $('out').innerHTML = `<div class="msg err"><b>${ic('alert', 16)} Erro de SQL</b><pre>${esc(msg)}</pre></div>`; }
 
 function finish(v, user, sql, label) {
   setPassed(v.pass);
+  Store.recordAttempt(cur.id, v.pass, sql);
   if (v.pass) {
     if (cur.project) state.project[cur.id] = sql;
     complete(cur); save();
   }
-  $('out').innerHTML = `<div class="msg ${v.pass ? 'ok' : 'fail'}">${v.pass ? '✅' : '🔎'} <b>${esc(v.msg)}</b>${v.hint ? `<small>💡 ${esc(v.hint)}</small>` : ''}</div>` +
+  $('out').innerHTML = `<div class="msg ${v.pass ? 'ok' : 'fail'}">${ic(v.pass ? 'check-circle' : 'search', 18)} <b>${esc(v.msg)}</b>${v.hint ? `<small>${ic('lightbulb', 13)} ${esc(v.hint)}</small>` : ''}</div>` +
     `<div class="pg"><span>${esc(label)}</span><select id="size" title="Linhas por página"><option>5</option><option selected>10</option><option>25</option><option>50</option></select>
-     <button class="b sm" id="pp">←</button><button class="b sm" id="pn">→</button><span id="pginfo"></span></div>
+     <button class="b sm" id="pp" aria-label="Página anterior">${ic('arrow-left', 14)}</button><button class="b sm" id="pn" aria-label="Próxima página">${ic('arrow-right', 14)}</button><span id="pginfo"></span></div>
      <div id="res"></div>`;
   showResult(user);
 }
@@ -316,8 +319,9 @@ function renderQuiz() {
     if (!sel) { $('qfb').innerHTML = '<div class="hint">Selecione uma alternativa.</div>'; return; }
     attempt(cur.id);
     const pick = +sel.value, ok = pick === cur.answer;
+    Store.recordAttempt(cur.id, ok, null);
     document.querySelectorAll('#quiz .opt').forEach(l => { l.classList.remove('right', 'wrong'); if (+l.dataset.i === cur.answer) l.classList.add('right'); else if (+l.dataset.i === pick) l.classList.add('wrong'); });
-    $('qfb').innerHTML = `<div class="msg ${ok ? 'ok' : 'fail'}">${ok ? '✅ <b>Correto!</b>' : '🔎 <b>Não foi dessa vez.</b>'}</div><div class="expl">${cur.explain}</div>`;
+    $('qfb').innerHTML = `<div class="msg ${ok ? 'ok' : 'fail'}">${ok ? ic('check-circle', 18) + ' <b>Correto!</b>' : ic('search', 18) + ' <b>Não foi dessa vez.</b>'}</div><div class="expl">${cur.explain}</div>`;
     if (ok) complete(cur);
     setPassed(ok);
     if (ok && ITEMS.indexOf(cur) < ITEMS.length - 1) $('qfb').insertAdjacentHTML('beforeend', '<div class="hint">Pressione <kbd>Ctrl</kbd>+<kbd>Enter</kbd> para ir ao próximo exercício.</div>');
@@ -345,12 +349,12 @@ function startExam() {
 function renderExam() {
   if (exam.done) return renderExamResult();
   const e = exam, q = e.qs[e.i], answered = Object.keys(e.ans).length;
-  showPanel(`<header><div><small>📝 Simulado · ${e.qs.length} questões · mínimo ${EXAM_PASS}% (referência didática)</small><h2>Questão ${e.i + 1} de ${e.qs.length}</h2></div><div class="tim" id="tim">--:--</div></header>
+  showPanel(`<header><div><h2>Questão <mark class="mk">${e.i + 1}</mark> de ${e.qs.length}</h2><p class="lede">Simulado · ${e.qs.length} questões · mínimo ${EXAM_PASS}% (referência didática)</p></div><div class="tim" id="tim">--:--</div></header>
     <div class="qnav">${e.qs.map((_, i) => `<button data-i="${i}" class="${e.ans[i] !== undefined ? 'a' : ''} ${i === e.i ? 'c' : ''}">${i + 1}</button>`).join('')}</div>
     <div class="qtext">${q.q.q}</div><div class="hint">${esc(q.q.track.title)}</div>
     ${q.order.map(oi => `<label class="opt"><input type="radio" name="eq" value="${oi}" ${e.ans[e.i] === oi ? 'checked' : ''}><span>${q.q.options[oi]}</span></label>`).join('')}
     <div class="row" style="margin-top:16px;justify-content:space-between">
-      <div class="row"><button class="b" id="eprev" ${e.i === 0 ? 'disabled' : ''}>← Anterior</button><button class="b" id="enext" ${e.i === e.qs.length - 1 ? 'disabled' : ''}>Próxima →</button></div>
+      <div class="row"><button class="b" id="eprev" ${e.i === 0 ? 'disabled' : ''}>${ic('arrow-left')}Anterior</button><button class="b" id="enext" ${e.i === e.qs.length - 1 ? 'disabled' : ''}>Próxima${ic('arrow-right')}</button></div>
       <div class="row"><span class="hint" id="acount">${answered}/${e.qs.length} respondidas</span><button class="b p" id="efinish">Finalizar simulado</button><button class="b" id="eexit">Sair</button></div></div>`);
   document.querySelectorAll('input[name=eq]').forEach(r => r.onchange = () => { e.ans[e.i] = +r.value; document.querySelectorAll('.qnav button')[e.i].classList.add('a'); $('acount').textContent = `${Object.keys(e.ans).length}/${e.qs.length} respondidas`; });
   document.querySelectorAll('.qnav button').forEach(b => b.onclick = () => { e.i = +b.dataset.i; renderExam(); });
@@ -366,6 +370,7 @@ function finishExam() {
   exam.done = true;
   const c = exam.qs.filter((x, i) => exam.ans[i] === x.q.answer).length;
   state.exams.unshift({d: new Date().toISOString().slice(0, 10), c, t: exam.qs.length}); state.exams = state.exams.slice(0, 10);
+  Store.recordExam(c, exam.qs.length, Math.round((Date.now() - (exam.endAt - EXAM_MIN * 60000)) / 1000));
   save(); renderNav(); renderExamResult();
 }
 
@@ -373,14 +378,14 @@ function renderExamResult() {
   const e = exam, c = e.qs.filter((x, i) => e.ans[i] === x.q.answer).length, t = e.qs.length, pct = Math.round(c / t * 100), pass = pct >= EXAM_PASS;
   const dom = {};
   e.qs.forEach((x, i) => { const d = x.q.track.title; dom[d] = dom[d] || {c: 0, t: 0}; dom[d].t++; if (e.ans[i] === x.q.answer) dom[d].c++; });
-  showPanel(`<header><div><small>📝 Resultado do simulado</small><h2>${pass ? 'Aprovado no simulado 🎉' : 'Continue treinando 💪'}</h2></div></header>
+  showPanel(`<header><div><h2>${pass ? 'Aprovado no <mark class="mk">simulado</mark>' : 'Continue <mark class="mk">treinando</mark>'}</h2><p class="lede">Resultado do simulado</p></div></header>
     <div class="score ${pass ? 'ok' : 'fail'}">${pct}% <span style="font-size:18px;color:var(--muted)">(${c}/${t})</span></div>
     <div class="hint">Nota mínima do simulado: ${EXAM_PASS}% (referência didática — não é a nota oficial do exame).</div>
     <h3>Desempenho por domínio</h3>
     <div class="dom">${Object.entries(dom).map(([d, v]) => `<div>${esc(d)}<div class="bar"><i style="width:${v.c / v.t * 100}%"></i></div></div><div>${v.c}/${v.t}</div>`).join('')}</div>
     <h3>Revisão</h3>
     ${e.qs.map((x, i) => { const ok = e.ans[i] === x.q.answer, your = e.ans[i];
-      return `<details class="s" ${ok ? '' : 'open'}><summary>${ok ? '✅' : '❌'} ${i + 1}. ${esc(x.q.title)}</summary><div class="qtext">${x.q.q}</div>
+      return `<details class="s" ${ok ? '' : 'open'}><summary>${ic(ok ? 'check-circle' : 'x-circle', 16)} ${i + 1}. ${esc(x.q.title)}</summary><div class="qtext">${x.q.q}</div>
       <div class="hint">Sua resposta: ${your === undefined ? '<i>em branco</i>' : x.q.options[your]}</div><div class="hint">Correta: ${x.q.options[x.q.answer]}</div><div class="expl">${x.q.explain}</div></details>`; }).join('')}
     <div class="row" style="margin-top:20px"><button class="b p" id="again">Novo simulado</button><button class="b" id="back">Voltar ao roadmap</button></div>`);
   $('again').onclick = startExam; $('back').onclick = () => { exam = null; renderDash(); };
@@ -494,12 +499,12 @@ function renderExport() {
   const steps = PROJECT.items.filter(i => i.kind !== 'export'), done = steps.filter(i => isDone(i.id)).length;
   $('exportBox').innerHTML = `<div class="pkg"><b>Etapas concluídas: ${done}/${steps.length}</b>${done < steps.length ? '<br><span class="hint">Você pode exportar agora, mas o pacote só terá o que já foi aprovado.</span>' : ''}</div>
     <div class="pkg">O pacote contém: <code>bibliotech.db</code> (banco SQLite real) · <code>schema_e_dados.sql</code> · <code>consultas.sql</code> · <code>executar.py</code> · <code>README.md</code></div>
-    <div class="row"><button class="b p" id="dzip">⬇ Baixar pacote (.zip)</button></div>
+    <div class="row"><button class="b p" id="dzip">${ic('download', 16)} Baixar pacote (.zip)</button></div>
     <details class="s"><summary>Baixar arquivos separados</summary><div class="row">
       <button class="b sm" id="ddb">bibliotech.db</button><button class="b sm" id="dschema">schema_e_dados.sql</button>
       <button class="b sm" id="dq">consultas.sql</button><button class="b sm" id="dpy">executar.py</button></div></details>
     <div id="expmsg"></div>`;
-  const mark = () => { complete(cur); $('expmsg').innerHTML = '<div class="msg ok">✅ Arquivos gerados. Copie-os para um computador com Python (ou SQLite) e siga o README.md.</div>'; };
+  const mark = () => { complete(cur); $('expmsg').innerHTML = '<div class="msg ok">' + ic('check-circle', 18) + ' Arquivos gerados. Copie-os para um computador com Python (ou SQLite) e siga o README.md.</div>'; };
   const need = () => { if (!Object.keys(state.project).length) { $('expmsg').innerHTML = '<div class="msg fail">Conclua ao menos a etapa 1 antes de exportar.</div>'; return null; } return buildFiles(); };
   $('dzip').onclick = async () => {
     const f = need(); if (!f) return;
@@ -517,7 +522,7 @@ function renderExport() {
 /* ───────── Autoteste dos gabaritos (roda no navegador) ───────── */
 function selfTest() {
   const lines = []; let okN = 0, badN = 0;
-  const rec = (ok, name, why) => { ok ? okN++ : badN++; lines.push(`<li class="${ok ? 'o' : 'f'}">${ok ? '✔' : '✖'} ${esc(name)}${why ? ' — ' + esc(why) : ''}</li>`); };
+  const rec = (ok, name, why) => { ok ? okN++ : badN++; lines.push(`<li class="${ok ? 'o' : 'f'}">${ic(ok ? 'check' : 'x', 14)} ${esc(name)}${why ? ' — ' + esc(why) : ''}</li>`); };
   for (const it of ITEMS) {
     const name = `${it.track.title} › ${it.title}`;
     try {
@@ -540,7 +545,7 @@ function selfTest() {
       }
     } catch (e) { rec(false, name, String(e.message || e)); }
   }
-  showPanel(`<header><div><small>🧪 Autoteste</small><h2>${badN ? `${badN} falha(s)` : 'Todos os gabaritos funcionam'}</h2></div></header>
+  showPanel(`<header><div><h2>${badN ? `${badN} falha(s)` : 'Todos os <mark class="mk">gabaritos</mark> funcionam'}</h2><p class="lede">Autoteste</p></div></header>
     <p class="hint">Cada gabarito é executado no SQLite do navegador (projeto: em sequência). ${okN} ok · ${badN} com problema.</p>
     <ul class="test">${lines.join('')}</ul><div class="row"><button class="b" id="back">Voltar</button></div>`);
   $('back').onclick = renderDash;
@@ -552,7 +557,10 @@ if (typeof initSqlJs === 'undefined') {
 } else {
   initSqlJs({locateFile: f => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${f}`}).then(SQL => {
     SQLJS = SQL;
-    cm = CodeMirror.fromTextArea($('editor'), {mode: 'text/x-sql', theme: 'material-darker', lineNumbers: true, matchBrackets: true,
+    Store.init(SQL, Auth.current());               // histórico em SQL (db/schema.js)
+    Auth.onChange(() => location.reload());        // trocou de usuário: recarrega com o progresso dele
+    renderAccount(); hydrateIcons(document);
+    cm =CodeMirror.fromTextArea($('editor'), {mode: 'text/x-sql', theme: 'material-darker', lineNumbers: true, matchBrackets: true,
       autoCloseBrackets: true, indentWithTabs: false, tabSize: 2, indentUnit: 2, lineWrapping: true,
       extraKeys: {'Ctrl-Enter': execute, 'Cmd-Enter': execute, Tab: c => c.execCommand('insertSoftTab')}});
     $('run').onclick = execute;
@@ -568,7 +576,7 @@ if (typeof initSqlJs === 'undefined') {
     $('hint').onclick = () => {
       const hs = cur.hints || []; if (!hs.length) { $('hints').innerHTML = '<div class="hint">Sem dicas para este item.</div>'; return; }
       const n = hintsShown[cur.id] = Math.min((hintsShown[cur.id] || 0) + 1, hs.length);
-      $('hints').innerHTML = hs.slice(0, n).map(h => `<div class="hint">💡 ${esc(h)}</div>`).join('');
+      $('hints').innerHTML = hs.slice(0, n).map(h => `<div class="hint">${ic('lightbulb', 13)} ${esc(h)}</div>`).join('');
     };
     $('sol').onclick = () => $('solbox').innerHTML = `<div class="sol">${esc(cur.solution)}</div>`;
     $('prev').onclick = () => go(ITEMS[ITEMS.indexOf(cur) - 1].id);
@@ -576,7 +584,7 @@ if (typeof initSqlJs === 'undefined') {
     $('examBtn').onclick = startExam;
     $('exportBtn').onclick = () => go(PROJECT.items[PROJECT.items.length - 1].id);
     $('roadmapBtn').onclick = renderDash; $('home').onclick = renderDash;
-    $('reset').onclick = () => { if (confirm('Reiniciar todo o progresso (lições e projeto)?')) { state.completed = []; state.project = {}; state.stats = {attempts: {}, first: {}, days: {}}; for (const k in drafts) delete drafts[k]; save(); renderNav(); renderDash(); } };
+    $('reset').onclick = () => { if (confirm('Reiniciar todo o progresso (lições e projeto)?')) { state.completed = []; state.project = {}; state.stats = {attempts: {}, first: {}, days: {}}; for (const k in drafts) delete drafts[k]; Store.resetProgress(); save(); renderNav(); renderDash(); } };
     renderNav(); renderDash();   // tela inicial = roadmap
     $('load').remove();
   }).catch(e => { $('load').innerHTML = 'Falha ao iniciar o SQLite. Verifique a internet e recarregue.<br>' + esc(e); });
