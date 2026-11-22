@@ -26,10 +26,10 @@ const phaseItems = p => phaseTracks(p).flatMap(t => t.items);
   by.proj.title = 'BiblioTech (18 etapas)';
 
   PHASES.push(
-    {id: 'f1', n: 1, icon: '🌱', title: 'Fundamentos', goal: 'Ler dados de uma tabela: SELECT, WHERE, ordenação e limites.', tracks: [by.basico, sba]},
-    {id: 'f2', n: 2, icon: '🔗', title: 'Juntar e resumir', goal: 'JOINs, NULLs, expressões, GROUP BY e HAVING.', tracks: [by.intermediario, sbb]},
-    {id: 'f3', n: 3, icon: '✏️', title: 'Alterar dados e estruturas', goal: 'INSERT, UPDATE, DELETE, CREATE, ALTER e DROP.', tracks: [sbc]},
-    {id: 'f4', n: 4, icon: '🚀', title: 'SQL avançado', goal: 'Window functions, subqueries e operadores de conjunto.', tracks: [by.avancado, sbd]},
+    {id: 'f1', n: 1, icon: '🌱', title: 'Fundamentos', goal: 'Ler dados de uma tabela: SELECT, WHERE, ordenação e limites.', tracks: [by.basico, sba, by.xa]},
+    {id: 'f2', n: 2, icon: '🔗', title: 'Juntar e resumir', goal: 'JOINs, NULLs, expressões, GROUP BY e HAVING.', tracks: [by.intermediario, sbb, by.xb, by.xq]},
+    {id: 'f3', n: 3, icon: '✏️', title: 'Alterar dados e estruturas', goal: 'INSERT, UPDATE, DELETE, CREATE, ALTER e DROP.', tracks: [sbc, by.xc]},
+    {id: 'f4', n: 4, icon: '🚀', title: 'SQL avançado', goal: 'Window functions, subqueries e operadores de conjunto.', tracks: [by.avancado, sbd, by.xd]},
     {id: 'f5', n: 5, icon: '🏆', title: 'Certificação Oracle + Projeto real', final: true,
      goal: 'Domínios do exame Oracle SQL (1Z0-071) com simulado, e o projeto BiblioTech — do esquema à entrega de um banco real exportável.',
      lanes: [{id: 'cert', icon: '🎓', title: 'Certificação Oracle SQL (1Z0-071)', tracks: dts}, {id: 'proj', icon: '📚', title: 'Projeto real: BiblioTech', tracks: [by.proj]}]}

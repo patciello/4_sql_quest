@@ -606,10 +606,13 @@ if (typeof initSqlJs === 'undefined') {
     $('prev').onclick = () => go(ITEMS[ITEMS.indexOf(cur) - 1].id);
     $('next').onclick = () => go(ITEMS[ITEMS.indexOf(cur) + 1].id);
     $('examBtn').onclick = startExam;
+    $('labBtn').onclick = renderLab;
     $('exportBtn').onclick = () => go(PROJECT.items[PROJECT.items.length - 1].id);
     $('roadmapBtn').onclick = renderDash; $('home').onclick = renderDash;
     $('reset').onclick = () => { if (confirm('Reiniciar todo o progresso (lições e projeto)?')) { state.completed = []; state.project = {}; state.stats = {attempts: {}, first: {}, days: {}}; for (const k in drafts) delete drafts[k]; Store.resetProgress(); save(); renderNav(); renderDash(); } };
     renderNav(); renderDash();   // tela inicial = roadmap
+    const goto = new URLSearchParams(location.search).get('go');   // atalhos do PWA (?go=lab | ?go=exam)
+    if (goto === 'lab') renderLab(); else if (goto === 'exam') startExam();
     $('load').remove();
   }).catch(e => { $('load').innerHTML = 'Falha ao iniciar o SQLite. Verifique a internet e recarregue.<br>' + esc(e); });
 }
