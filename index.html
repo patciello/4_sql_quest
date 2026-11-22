@@ -4,6 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#0B0B0B">
+<meta name="description" content="SQL Quest: aprenda SQL do zero na prática, com lab visual, exercícios validados, simulado Oracle e projeto real.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SQL Quest">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
 <title>SQL Quest</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
@@ -19,7 +27,9 @@
   <div class="bar"><i id="barfill" style="transform:scaleX(0)"></i></div>
   <div class="pc" id="pc"></div>
   <button class="b" id="roadmapBtn"><i data-ic="map"></i>Roadmap e métricas</button>
+  <button class="b" id="labBtn"><i data-ic="brain"></i>Lab visual</button>
   <button class="b" id="examBtn"><i data-ic="file"></i>Simulado Oracle</button>
+  <button class="b hidden" id="installBtn"><i data-ic="download"></i>Instalar app</button>
   <button class="b" id="exportBtn"><i data-ic="package"></i>Exportar projeto</button>
   <nav id="nav"></nav>
   <button class="b" id="reset">Reiniciar progresso</button>
@@ -78,11 +88,14 @@
 <script src="storage.js"></script>
 <script src="content.js"></script>
 <script src="content_sb.js"></script>
+<script src="content_extra.js"></script>
 <script src="explicacoes.js"></script>
 <script src="videos_hc.js"></script>
 <script src="roadmap.js"></script>
 <script src="dashboard.js"></script>
+<script src="lab.js"></script>
 <script src="login.js"></script>
 <script src="app.js"></script>
+<script src="pwa.js"></script>
 </body>
 </html>
